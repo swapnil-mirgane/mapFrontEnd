@@ -31,7 +31,7 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 let data1 = "";
 async function upload() {
-  let file = document.getElementById("file").value;
+  let file = document.getElementById("file");
   console.log(file);
   let file1 = { file: file };
   const respons = await $fetch("http://localhost:3001/map/upload", {
@@ -49,7 +49,6 @@ async function upload() {
 let res: any = await $fetch("http://localhost:3001/map").catch((err) =>
   alert(err)
 );
-console.log(res);
 
 const data = reactive({
   options: {
@@ -131,13 +130,15 @@ async function onMapLoaded(map: mapboxgl.Map) {
     },
   });
 
-  res.forEach((element) => {
-    new mapboxgl.Marker({
-      color: getRandomColor(),
-    })
-      .setLngLat([element.Long, element.Lat])
-      .addTo(map);
-  });
+  if (res == !"") {
+    res.forEach((element) => {
+      new mapboxgl.Marker({
+        color: getRandomColor(),
+      })
+        .setLngLat([element.Long, element.Lat])
+        .addTo(map);
+    });
+  }
 
   function getRandomColor() {
     var letters = "0123456789ABCDEF";
@@ -157,6 +158,50 @@ async function onMapLoaded(map: mapboxgl.Map) {
       })
     );
   map.addControl(new mapboxgl.NavigationControl());
+
+  map.addSource("barshi1", {
+    type: "geojson",
+    data: {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [75.66352844238281, 18.213535155446717],
+            [75.67623138427734, 18.21810079910634],
+            [75.68944931030273, 18.219405246731313],
+            [75.71159362792969, 18.22299242729397],
+            [75.71159362792969, 18.228862199630495],
+            [75.71674346923828, 18.240927220776484],
+            [75.7148551940918, 18.24940484288711],
+            [75.71090698242188, 18.25445861314665],
+            [75.70747375488281, 18.25755601257177],
+            [75.7009506225586, 18.260653356758375],
+            [75.69494247436523, 18.261794469637948],
+            [75.69116592407227, 18.258697145804437],
+            [75.68532943725586, 18.25886016422559],
+            [75.68103790283203, 18.259186200608813],
+            [75.66936492919922, 18.25657789240474],
+            [75.66438674926758, 18.252665356656156],
+            [75.6624984741211, 18.247448505257417],
+            [75.65820693969727, 18.237177371422433],
+            [75.6573486328125, 18.228536106362327],
+            [75.65631866455078, 18.22723172717752],
+            [75.66352844238281, 18.213535155446717],
+          ],
+        ],
+      },
+      properties: {},
+    },
+  });
+
+  map.addLayer({
+    id: "barshi",
+    source: "barshi1",
+    type: "fill",
+    layout: {},
+    paint: { "fill-color": "pink", "fill-opacity": 0.5 },
+  });
 }
 </script>
 <style>
