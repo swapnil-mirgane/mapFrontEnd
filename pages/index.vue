@@ -1,6 +1,19 @@
 <template>
   <!-- <input type="text" id="search" placeholder="Enter The Pin " /> -->
-  <input type="file" id="file" @change="upload" />
+  <input
+    id="file1"
+    type="file"
+    @change="upload"
+    aria-label="upload image button"
+  />
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.3.0/mapbox-gl-draw.css"
+      type="text/css"
+    />
+  </head>
+
   <!-- <center><button @click="upload">Upload</button></center> -->
   <select id="layer-change">
     <option selected value="mapbox://styles/mapbox/streets-v11">Dark</option>
@@ -29,22 +42,54 @@ import mapboxgl from "mapbox-gl";
 import VMap from "v-mapbox";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
-let data1 = "";
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
+
 async function upload() {
-  let file = document.getElementById("file");
-  console.log(file);
-  let file1 = { file: file };
-  const respons = await $fetch("http://localhost:3001/map/upload", {
+  let formData = new FormData();
+  var fileField = document.getElementById("file1") as HTMLInputElement | null;
+  formData.append("csv", fileField.files[0]);
+  await $fetch("http://localhost:3001/map/upload", {
     method: "POST",
-    body: JSON.stringify(file1),
+    body: formData,
   })
-    .then(() => {
-      alert("file upload succefully");
-    })
-    .catch((err) => {
-      alert("file Not upload" + err);
-    });
+    .then((res) => alert("file upload sucessfully" + res))
+    .catch((err) => alert(err));
 }
+// async function upload(e) {
+
+// console.log(event);
+
+// let file1 = { file: e.target.files[0] };
+// const file = e.target.files[0];
+// if (!file) return;
+
+// console.log(file);
+
+// const readData = (f) =>
+//   new Promise((resolve) => {
+//     const reader = new FileReader();
+//     reader.onloadend = () => resolve(reader.result);
+//     reader.readAsDataURL(f);
+//   });
+
+// const data = { file: e.target.files[0] };
+
+// // const instance = this.upload(data, {
+// //   folder: "upload-examples",
+// //   uploadPreset: "your-upload-preset",
+// // });
+
+// const respons = await $fetch("http://localhost:3001/map/upload", {
+//   method: "POST",
+//   body: data,
+// })
+//   .then(() => {
+//     alert("file upload succefully");
+//   })
+//   .catch((err) => {
+//     alert("file Not upload" + err);
+//   });
+// }
 
 let res: any = await $fetch("http://localhost:3001/map").catch((err) =>
   alert(err)
@@ -92,6 +137,8 @@ async function onMapLoaded(map: mapboxgl.Map) {
   marker.setLngLat([75.70610046386717, 18.333587971760853]);
   marker.addTo(map);
 
+  /// add Marker for map click
+
   map.on("click", (e) => {
     colorSet++;
     console.log(e.lngLat.lat, e.lngLat.lng);
@@ -102,14 +149,18 @@ async function onMapLoaded(map: mapboxgl.Map) {
         color: `${color[colorSet]}`,
       })
         .setLngLat([e.lngLat.lng, e.lngLat.lat])
+        .setPopup(new mapboxgl.Popup().setHTML("<h1>Hello World!</h1>"))
         .addTo(map);
+      marker.togglePopup();
     }
     new mapboxgl.Marker({
       draggable: true,
       color: `${color[colorSet]}`,
     })
       .setLngLat([e.lngLat.lng, e.lngLat.lat])
+      .setPopup(new mapboxgl.Popup().setHTML("<h1>Hello World!</h1>"))
       .addTo(map);
+    marker.setOffset([0, 1]);
   });
 
   const setStyle: any = document.getElementById("layer-change");
@@ -130,15 +181,13 @@ async function onMapLoaded(map: mapboxgl.Map) {
     },
   });
 
-  if (res == !"") {
-    res.forEach((element) => {
-      new mapboxgl.Marker({
-        color: getRandomColor(),
-      })
-        .setLngLat([element.Long, element.Lat])
-        .addTo(map);
-    });
-  }
+  res.forEach((element) => {
+    new mapboxgl.Marker({
+      color: getRandomColor(),
+    })
+      .setLngLat([element.Long, element.Lat])
+      .addTo(map);
+  });
 
   function getRandomColor() {
     var letters = "0123456789ABCDEF";
@@ -191,10 +240,11 @@ async function onMapLoaded(map: mapboxgl.Map) {
           ],
         ],
       },
-      properties: {},
+      properties: {
+        description: "<h2>swapnil</h2>",
+      },
     },
   });
-
   map.addLayer({
     id: "barshi",
     source: "barshi1",
@@ -202,6 +252,90 @@ async function onMapLoaded(map: mapboxgl.Map) {
     layout: {},
     paint: { "fill-color": "pink", "fill-opacity": 0.5 },
   });
+
+  // Add geolocate control to the map.
+  map.addControl(
+    new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true,
+      },
+      // When active the map will receive updates to the device's location as it changes.
+      trackUserLocation: true,
+      // Draw an arrow next to the location dot to indicate which direction the device is heading.
+      showUserHeading: false,
+      // showAccuracyCircle: true,
+    })
+  );
+
+  map.on("mouseover", () => {
+    console.log("A mouseover event has occurred.");
+  });
+
+  ///////////////////////////////////////////////////////       Line Add //////////////////////////////////////////////////////////
+
+  map.addSource("mandegaon", {
+    type: "geojson",
+    data: {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [75.7245111465454, 18.32804764899319],
+          [75.72592735290527, 18.330614144106967],
+          [75.72571277618408, 18.3339138675723],
+          [75.72386741638182, 18.336643220877654],
+          [75.72150707244873, 18.33810972127523],
+          [75.72039127349854, 18.338720759435702],
+          [75.71996212005615, 18.337661625251446],
+          [75.7203483581543, 18.337091319541262],
+          [75.72047710418701, 18.336439539282953],
+          [75.72073459625244, 18.33570628355506],
+          [75.72004795074463, 18.33468786766262],
+          [75.7126235961914, 18.33599143892991],
+          [75.7073450088501, 18.331388158967503],
+          [75.70674419403076, 18.32560333252606],
+          [75.70910453796387, 18.32372933317727],
+          [75.70996284484863, 18.32124421577696],
+          [75.71129322052002, 18.32006275400308],
+          [75.72399616241455, 18.327395834645976],
+          [75.72429656982422, 18.32788469563667],
+          [75.72412490844727, 18.327110665096683],
+        ],
+      },
+    },
+  });
+  // Add a new layer to visualize the polygon.
+  // data.map.addLayer({
+  //     id: "pune",
+  //     type: "fill",
+  //     source: "pune1", // reference the data source
+  //     layout: {},
+  //     paint: {
+  //         "fill-color": "red", //blue color fill
+  //         "fill-opacity": 0.5,
+  //     },
+  // });
+  const layer: mapboxgl.AnyLayer = {
+    id: "mandegaon",
+    type: "line",
+    source: "mandegaon",
+    layout: {
+      "line-join": "round",
+      "line-cap": "round",
+    },
+    paint: {
+      "line-color": "red", //blue color fill
+      "line-width": 5,
+      "line-opacity": 1,
+    },
+  };
+  map.addLayer(layer);
+
+  ////////////////////////////////////////////////////// Draw tool                 //////////////////////
+
+  var Draw = new MapboxDraw();
+  map.addControl(Draw, "top-right");
 }
 </script>
 <style>
