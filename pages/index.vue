@@ -345,7 +345,7 @@ async function onMapLoaded(map: mapboxgl.Map) {
   left: 10px;
   z-index: 1;
 }
-#file {
+#file1 {
   width: 185px;
   position: fixed;
   top: 40px;
